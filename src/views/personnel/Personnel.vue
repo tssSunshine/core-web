@@ -106,10 +106,10 @@
 
 <script>
 
-  import {API_findDepartmentList,API_findDepartmentById} from '../../api/department/index'
-  import {API_findPersonnelById,API_queryPersonnelList,API_deletePersonnel} from '../../api/personnel/index'
-  import DepartmentInfo from "../../components/department/DepartmentInfo";
-  import PersonnelInfo from "../../components/personnel/PersonnelInfo";
+  import {API_findDepartmentById} from '../../api/department/index'
+  import {API_queryPersonnelList,API_deletePersonnel} from '../../api/personnel/index'
+  import DepartmentInfo from "../department/DepartmentInfo";
+  import PersonnelInfo from "./PersonnelInfo";
 
 export default {
 

@@ -103,7 +103,7 @@
       </el-main>
 
       <el-dialog title="项目信息" :visible.sync="projectFormVisible">
-        <ProjectInfo :projectFormVisible="projectFormVisible" @change-visible="onChangeVisible"
+        <ProjectInfo :projectFormVisible="projectFormVisible" @change-projectFormVisible="onChangeProjectFormVisible"
                         v-bind:projectForm="projectForm" @refreshTable="refreshTable"></ProjectInfo>
       </el-dialog>
 
@@ -121,8 +121,8 @@
 
 
     import {API_findPersonnelById} from '../../api/personnel/index'
-    import ProjectInfo from "../../components/project/ProjectInfo";
-    import PersonnelInfo from "../../components/personnel/PersonnelInfo";
+    import ProjectInfo from "./ProjectInfo";
+    import PersonnelInfo from "../personnel/PersonnelInfo";
 
     export default {
 
@@ -206,7 +206,7 @@
                 });
             },
             // 改变部门详情框显示状态
-            onChangeVisible(visible) {
+            onChangeProjectFormVisible(visible) {
                 this.projectFormVisible = visible;
             },
             // 改变员工详情框显示状态

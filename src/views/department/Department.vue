@@ -97,81 +97,81 @@
   </el-container>
 </template>
 
-
 <script>
-
-  import {API_findDepartmentList,API_deleteDepartment,API_findDepartmentAll} from '../../api/department/index'
-  import {API_findPersonnelById} from '../../api/personnel/index'
-  import DepartmentInfo from "../../components/department/DepartmentInfo";
-  import PersonnelInfo from "../../components/personnel/PersonnelInfo";
+// eslint-disable-next-line camelcase
+import {API_findDepartmentList, API_deleteDepartment} from '../../api/department/index'
+// eslint-disable-next-line camelcase
+import {API_findPersonnelById} from '../../api/personnel/index'
+import DepartmentInfo from './DepartmentInfo'
+import PersonnelInfo from '../personnel/PersonnelInfo'
 
 export default {
 
-    components:{DepartmentInfo,PersonnelInfo},
+  components: {DepartmentInfo, PersonnelInfo},
 
   data () {
     return {
-        queryParam:'',
-        tableData: [],
-        departmentForm: {},
-        departmentFormVisible: false,
-        personForm: {},
-        personFormVisible: false,
+      queryParam: '',
+      tableData: [],
+      departmentForm: {},
+      departmentFormVisible: false,
+      personForm: {},
+      personFormVisible: false
     }
   },
-    mounted: function() {
-        this.refreshTable();
+  mounted: function () {
+    this.refreshTable()
+  },
+  methods: {
+    // 刷新部门列表
+    refreshTable () {
+      this.tableData = []
+      API_findDepartmentList(this.queryParam)
+        .then(response => {
+          this.tableData = response.data.data // 部门表格数据
+        })
+        .catch(error => {
+          console.log(error)
+        })
     },
-    methods:{
-        // 刷新部门列表
-        refreshTable() {
-            this.tableData = [];
-            API_findDepartmentList(this.queryParam)
-                .then(response => {
-                    this.tableData = response.data // 部门表格数据
-                })
-                .catch(error => {
-                    console.log(error)
-                })
-        },
-        // 新建部门信息
-        addDepartment() {
-            this.departmentForm = {};
-            this.departmentFormVisible = true;
-        },
-        // 编辑部门信息
-        handleEdit(index, row){
-            this.departmentForm = row;
-            this.departmentFormVisible = true;
-        },
-        // 删除部门信息
-        handleDelete(index, row) {
-            API_deleteDepartment(row.id).then(response => {
-               this.refreshTable();
-            }).catch(error => {
-                this.$message.error('删除失败！');
-                console.log(error)
-            });
-        },
-        // 打开员工详情框
-        openPersonInfo(row) {
-            API_findPersonnelById(row.departmentHeadId).then(response => {
-                this.personForm = response.data;
-                this.personFormVisible = true;
-            }).catch(error => {
-                this.$message.error('查询员工信息失败！');
-                console.log(error)
-            });
-        },
-        // 改变部门详情框显示状态
-        onChangeVisible(visible) {
-            this.departmentFormVisible = visible;
-        },
-        // 改变员工详情框显示状态
-        onChangePersonFormVisible(visible) {
-            this.personFormVisible = visible;
-        },
+    // 新建部门信息
+    addDepartment () {
+      this.departmentForm = {}
+      this.departmentFormVisible = true
+    },
+    // 编辑部门信息
+    handleEdit (index, row) {
+      this.departmentForm = row
+      this.departmentFormVisible = true
+    },
+    // 删除部门信息
+    handleDelete (index, row) {
+      API_deleteDepartment(row.id).then(response => {
+        this.refreshTable()
+      }).catch(error => {
+        this.$message.error('删除失败！')
+        console.log(error)
+      })
+    },
+    // 打开员工详情框
+    openPersonInfo (row) {
+      API_findPersonnelById(row.departmentHeadId).then(response => {
+        this.personForm = response.data.data
+        this.personFormVisible = true
+      }).catch(error => {
+        this.$message.error('查询员工信息失败！')
+        console.log(error)
+      })
+    },
+    // 改变部门详情框显示状态
+    onChangeVisible (visible) {
+      this.departmentFormVisible = visible
+    },
+    // 改变员工详情框显示状态
+    onChangePersonFormVisible (visible) {
+      this.personFormVisible = visible
     }
+  }
 }
 </script>
 

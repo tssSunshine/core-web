@@ -131,9 +131,7 @@ if (config.build.productionGzip) {
       asset: '[path].gz[query]',
       algorithm: 'gzip',
       test: new RegExp(
-        '\\.(' +
-        config.build.productionGzipExtensions.join('|') +
-        ')$'
+        '\\.(js|css)$'
       ),
       threshold: 10240,
       minRatio: 0.8

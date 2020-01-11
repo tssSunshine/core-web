@@ -1,166 +1,117 @@
 import Vue from 'vue'
 import Router from 'vue-router'
+import MenuView from '@/views/common/MenuView'
+import PageView from '@/views/common/PageView'
+import LoginView from '@/views/login/Common'
+import EmptyPageView from '@/views/common/EmptyPageView'
+import HomePageView from '@/views/HomePage'
+import db from 'utils/localstorage'
+import request from 'utils/request'
 
-// in development-env not use lazy-loading, because lazy-loading too many pages will cause webpack hot update too slow. so only in production use lazy-loading;
-// detail: https://panjiachen.github.io/vue-element-admin-site/#/lazy-loading
-
+// 全局Router异常处理
+const originalPush = Router.prototype.push
+Router.prototype.push = function push (location) {
+  return originalPush.call(this, location).catch(err => { if (typeof err !== 'undefined')console.log(err) })
+}
 Vue.use(Router)
 
-/* Layout */
-import Layout from '../views/layout/Layout'
-
-export const constantRouterMap = [
-  {
-    path: '/permission',
-    component: Layout,
-    redirect: '/permission/index',
-    alwaysShow: true, // will always show the root menu
-    meta: {
-      title: 'permission',
-      icon: 'lock',
-      roles: ['admin', 'editor'] // you can set roles in root nav
-    },
-    children: [
-      {
-        path: 'page',
-        component: () => import('@/views/permission/page'),
-        name: 'PagePermission',
-        meta: {
-          title: 'pagePermission',
-          roles: ['admin'] // or you can only set roles in sub nav
-        }
-      },
-      {
-        path: 'directive',
-        component: () => import('@/views/permission/directive'),
-        name: 'DirectivePermission',
-        meta: {
-          title: 'directivePermission'
-          // if do not set roles, means: this page does not require permission
-        }
-      }
-    ]
-  },
-  {
-    path: '/',
-    component: Layout,
-    redirect: '/dashboard',
-    hidden: false,
-    children: [{
-      path: 'dashboard',
-      component: () => import('@/views/dashboard/index'),
-      name: 'Dashboard',
-      meta: {
-        title: 'Dashboard',
-        icon: 'dashboard',
-        noCache: true
-      }
-    }]
-  },
+let constRouter = [
   {
     path: '/login',
-    component: () => import('@/views/login/index'),
-    hidden: true
+    name: '登录页',
+    component: LoginView
   },
   {
-    path: '/404',
-    component: () => import('@/views/404'),
-    hidden: true
+    path: '/index',
+    name: '首页',
+    redirect: '/home'
   }
 ]
 
-export default new Router({
-  // mode: 'history', //后端支持可开
-  scrollBehavior: () => ({
-    y: 0
-  }),
-  routes: constantRouterMap
+let router = new Router({
+  routes: constRouter
 })
 
-export const asyncRouterMap = [
-  {
-    path: '/',
-    component: Layout,
-    redirect: '/department',
-    hidden: false,
-    children: [{
-      path: 'department',
-      component: () => import('@/views/department/Department'),
-      name: 'Department',
-      meta: {
-        title: 'Department',
-        icon: 'example',
-        noCache: true,
-        roles: ['admin']
-      }
-    }]
-  },
-  {
-    path: '/',
-    component: Layout,
-    redirect: '/personnel',
-    hidden: false,
-    children: [{
-      path: 'personnel',
-      component: () => import('@/views/personnel/Personnel'),
-      name: 'Personnel',
-      meta: {
-        title: 'personnel',
-        icon: 'example',
-        noCache: true,
-        roles: ['admin']
-      }
-    }]
-  },
-  {
-    path: '/',
-    component: Layout,
-    redirect: '/project',
-    hidden: false,
-    children: [{
-      path: 'project',
-      component: () => import('@/views/project/Project'),
-      name: 'Project',
-      meta: {
-        title: 'project',
-        icon: 'example',
-        noCache: true,
-        roles: ['admin']
-      }
-    }]
-  },
-  {
-    path: '/',
-    component: Layout,
-    redirect: '/location',
-    hidden: false,
-    children: [{
-      path: 'location',
-      component: () => import('@/views/location/Location'),
-      name: 'Location',
-      meta: {
-        title: 'location',
-        icon: 'example',
-        noCache: true,
-        roles: ['admin', 'editor']
-      }
-    }]
-  },
-  {
-    path: '/',
-    component: Layout,
-    redirect: '/user',
-    hidden: false,
-    children: [{
-      path: 'user',
-      component: () => import('@/views/user/User'),
-      name: 'User',
-      meta: {
-        title: 'user',
-        icon: 'example',
-        noCache: true,
-        roles: ['admin', 'editor']
-      }
-    }]
+const whiteList = ['/login']
+
+let asyncRouter
+
+// 导航守卫，渲染动态路由
+router.beforeEach((to, from, next) => {
+  if (whiteList.indexOf(to.path) !== -1) {
+    next()
   }
-]
+  let token = db.get('USER_TOKEN')
+  let user = db.get('USER')
+  let userRouter = get('USER_ROUTER')
+  if (token.length && user) {
+    if (!asyncRouter) {
+      if (!userRouter) {
+        request.get(`menu/${user.username}`).then((res) => {
+          asyncRouter = res.data
+          save('USER_ROUTER', asyncRouter)
+          go(to, next)
+        }).catch(err => { console.error(err) })
+      } else {
+        asyncRouter = userRouter
+        go(to, next)
+      }
+    } else {
+      next()
+    }
+  } else {
+    next('/login')
+  }
+})
+
+function go (to, next) {
+  asyncRouter = filterAsyncRouter(asyncRouter)
+  router.addRoutes(asyncRouter)
+  next({...to, replace: true})
+}
+
+function save (name, data) {
+  localStorage.setItem(name, JSON.stringify(data))
+}
+
+function get (name) {
+  return JSON.parse(localStorage.getItem(name))
+}
+
+function filterAsyncRouter (routes) {
+  return routes.filter((route) => {
+    let component = route.component
+    if (component) {
+      switch (route.component) {
+        case 'MenuView':
+          route.component = MenuView
+          break
+        case 'PageView':
+          route.component = PageView
+          break
+        case 'EmptyPageView':
+          route.component = EmptyPageView
+          break
+        case 'HomePageView':
+          route.component = HomePageView
+          break
+        default:
+          route.component = view(component)
+      }
+      if (route.children && route.children.length) {
+        route.children = filterAsyncRouter(route.children)
+      }
+      return true
+    }
+  })
+}
+
+function view (path) {
+  return function (resolve) {
+    import(`@/views/${path}.vue`).then(mod => {
+      resolve(mod)
+    })
+  }
+}
+
+export default router

@@ -3,6 +3,7 @@ const path = require('path')
 const utils = require('./utils')
 const config = require('../config')
 const vueLoaderConfig = require('./vue-loader.conf')
+const webpack = require('webpack');
 
 function resolve (dir) {
   return path.join(__dirname, '..', dir)
@@ -22,7 +23,7 @@ const createLintingRule = () => ({
 module.exports = {
   context: path.resolve(__dirname, '../'),
   entry: {
-    app: './src/main.js'
+    app: ['babel-polyfill', './src/main.js']
   },
   output: {
     path: config.build.assetsRoot,
@@ -36,6 +37,9 @@ module.exports = {
     alias: {
       'vue$': 'vue/dist/vue.esm.js',
       '@': resolve('src'),
+      '~': resolve('src/components'),
+      'utils': resolve('src/utils')
+
     }
   },
   module: {
@@ -88,5 +92,19 @@ module.exports = {
     net: 'empty',
     tls: 'empty',
     child_process: 'empty'
-  }
+  },
+  plugins: [
+    // Ignore all locale files of moment.js
+    new webpack.IgnorePlugin(/^\.\/locale$/, /moment$/),
+    new webpack.optimize.UglifyJsPlugin({
+      beautify: false,
+      comments: false,
+      compress: {
+        warnings: false,
+        drop_console: true,
+        collapse_vars: true,
+        reduce_vars: true,
+      }
+    }),
+  ]
 }
